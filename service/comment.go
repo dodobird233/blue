@@ -8,34 +8,34 @@ import (
 	"time"
 )
 
-// 根据视频id列表查询评论数量列表
-func QueryCommentCountListByVideoIdList(videoIdList *[]int64) ([]entity.VideoCommentCnt, error) {
-	var getCommentCountList []entity.VideoCommentCnt
-	result := global.DB.Model(&entity.Comment{}).Select("video_id", "count(video_id) as comment_cnt").Where("video_id in ?", *videoIdList).Group("video_id").Find(&getCommentCountList)
+// 根据商品id列表查询评论数量列表
+func QueryCommentCountListByGoodsIdList(goodsIdList *[]int64) ([]entity.GoodsCommentCnt, error) {
+	var getCommentCountList []entity.GoodsCommentCnt
+	result := global.DB.Model(&entity.Comment{}).Select("goods_id", "count(goods_id) as comment_cnt").Where("goods_id in ?", *goodsIdList).Group("goods_id").Find(&getCommentCountList)
 	if result.Error != nil {
 		err := errors.New("commentList query failed")
 		return nil, err
 	}
 	// 找数据找齐了
-	if len(*videoIdList) == len(getCommentCountList) {
+	if len(*goodsIdList) == len(getCommentCountList) {
 		return getCommentCountList, nil
 	}
 	// 数据不全，误差部分补全为0
-	var commentCountList []entity.VideoCommentCnt
-	commentCountList = make([]entity.VideoCommentCnt, len(*videoIdList))
-	for i, videoId := range *videoIdList {
-		commentCountList[i].VideoId = videoId
-		commentCountList[i].CommentCnt = FindVideoIdFromVideoCommentCntList(videoId, &getCommentCountList)
+	var commentCountList []entity.GoodsCommentCnt
+	commentCountList = make([]entity.GoodsCommentCnt, len(*goodsIdList))
+	for i, goodsId := range *goodsIdList {
+		commentCountList[i].GoodsId = goodsId
+		commentCountList[i].CommentCnt = FindGoodsIdFromGoodsCommentCntList(goodsId, &getCommentCountList)
 	}
 	return commentCountList, nil
 }
 
 // 增加评论
-func AddComment(currentId int64, videoId int64, commentText string) (err error) {
+func AddComment(currentId int64, goodsId int64, commentText string) (err error) {
 	var addComment entity.Comment
 	addComment.CommentId = util.GetNextId()
 	addComment.UserId = currentId
-	addComment.VideoId = videoId
+	addComment.GoodsId = goodsId
 	addComment.Content = commentText
 	addComment.CreateDate = time.Now().Format("01-02")
 	result := global.DB.Model(&entity.Comment{}).Create(&addComment)
@@ -46,11 +46,11 @@ func AddComment(currentId int64, videoId int64, commentText string) (err error) 
 }
 
 // 删除评论
-func CancelComment(currentId int64, videoId int64, commentId int64) (err error) {
+func CancelComment(currentId int64, goodsId int64, commentId int64) (err error) {
 	var cancelComment entity.Comment
 	cancelComment.CommentId = commentId
 	cancelComment.UserId = currentId
-	cancelComment.VideoId = videoId
+	cancelComment.GoodsId = goodsId
 	result := global.DB.Model(&entity.Comment{}).Delete(&cancelComment)
 	if result.Error != nil {
 		return err
@@ -62,9 +62,9 @@ func CancelComment(currentId int64, videoId int64, commentId int64) (err error) 
 	return
 }
 
-func GetCommentListByVideoId(currentId int64, videoId int64) (comments []entity.CommentResponse, err error) {
+func GetCommentListByGoodsId(currentId int64, goodsId int64) (comments []entity.CommentResponse, err error) {
 	var commentList []entity.Comment
-	if global.DB.Model(&entity.Comment{}).Where("video_id=?", videoId).Find(&commentList).Error != nil {
+	if global.DB.Model(&entity.Comment{}).Where("goods_id=?", goodsId).Find(&commentList).Error != nil {
 		return
 	}
 	comments = make([]entity.CommentResponse, len(commentList))

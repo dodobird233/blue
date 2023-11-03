@@ -8,55 +8,55 @@ import (
 	"sort"
 )
 
-// 获取每个视频的点赞数量
-func QueryLikeCountListByVideoIdList(videoIdList *[]int64) ([]entity.VideoLikeCnt, error) {
-	var getLikeCountList []entity.VideoLikeCnt
-	result := global.DB.Model(&entity.Like{}).Select("video_id", "count(video_id) as like_cnt").Where(map[string]interface{}{"video_id": *videoIdList}).Group("video_id").Find(&getLikeCountList)
+// 获取每个商品的点赞数量
+func QueryLikeCountListByGoodsIdList(goodsIdList *[]int64) ([]entity.GoodsLikeCnt, error) {
+	var getLikeCountList []entity.GoodsLikeCnt
+	result := global.DB.Model(&entity.Like{}).Select("goods_id", "count(goods_id) as like_cnt").Where(map[string]interface{}{"goods_id": *goodsIdList}).Group("goods_id").Find(&getLikeCountList)
 	if result.Error != nil {
 		err := errors.New("likesList query failed")
 		return nil, err
 	}
 	// 找数据找齐了
-	if len(*videoIdList) == len(getLikeCountList) {
+	if len(*goodsIdList) == len(getLikeCountList) {
 		return getLikeCountList, nil
 	}
 	// 数据不全，误差部分补全为0
-	var likeCountList []entity.VideoLikeCnt
-	likeCountList = make([]entity.VideoLikeCnt, len(*videoIdList))
-	for i, videoId := range *videoIdList {
-		likeCountList[i].VideoId = videoId
-		likeCountList[i].LikeCnt = FindVideoIdFromVideoLikeCntList(videoId, &getLikeCountList)
+	var likeCountList []entity.GoodsLikeCnt
+	likeCountList = make([]entity.GoodsLikeCnt, len(*goodsIdList))
+	for i, goodsId := range *goodsIdList {
+		likeCountList[i].GoodsId = goodsId
+		likeCountList[i].LikeCnt = FindGoodsIdFromGoodsLikeCntList(goodsId, &getLikeCountList)
 	}
 	return likeCountList, nil
 }
 
-// 使用用户id查询其点赞视频的id列表
-func QueryLikeVideoIdListByUserId(userId int64) (likeList []int64, err error) {
-	result := global.DB.Model(&entity.Like{}).Select("video_id").Where("user_id=?", userId).Find(&likeList)
+// 使用用户id查询其点赞商品的id列表
+func QueryLikeGoodsIdListByUserId(userId int64) (likeList []int64, err error) {
+	result := global.DB.Model(&entity.Like{}).Select("goods_id").Where("user_id=?", userId).Find(&likeList)
 	if result.Error != nil {
 		return nil, err
 	}
 	return
 }
 
-// 根据用户id以及给定视频id列表返回点赞列表情况
-func ParseLikeVideoListByUserIdFormVideoId(userId int64, videoIdList *[]int64) (isFavoriteList []bool, err error) {
+// 根据用户id以及给定商品id列表返回点赞列表情况
+func ParseLikeGoodsListByUserIdFormGoodsId(userId int64, goodsIdList *[]int64) (isFavoriteList []bool, err error) {
 	var likeList []int64
-	likeList, err = QueryLikeVideoIdListByUserId(userId)
+	likeList, err = QueryLikeGoodsIdListByUserId(userId)
 	if err != nil {
 		return nil, err
 	}
 	sort.Slice(likeList, func(i, j int) bool { return likeList[i] < likeList[j] })
-	isFavoriteList = make([]bool, len(*videoIdList))
-	for i, videoId := range *videoIdList {
-		isFavoriteList[i] = FindInt64(videoId, &likeList)
+	isFavoriteList = make([]bool, len(*goodsIdList))
+	for i, goodsId := range *goodsIdList {
+		isFavoriteList[i] = FindInt64(goodsId, &likeList)
 	}
 	return
 }
 
-// 根据视频id查询视频对象
-func QueryVideoListByVideoIdList(videoIdList *[]int64) (videoList []entity.Video, err error) {
-	result := global.DB.Model(&entity.Video{}).Where("video_id in ?", *videoIdList).Find(&videoList)
+// 根据商品id查询商品对象
+func QueryGoodsListByGoodsIdList(goodsIdList *[]int64) (goodsList []entity.Goods, err error) {
+	result := global.DB.Model(&entity.Goods{}).Where("goods_id in ?", *goodsIdList).Find(&goodsList)
 	if result.Error != nil {
 		return nil, err
 	}
@@ -64,9 +64,9 @@ func QueryVideoListByVideoIdList(videoIdList *[]int64) (videoList []entity.Video
 }
 
 // 点赞操作和取消赞操作
-func GiveOrCancelLike(userId int64, videoId int64, actionType int32) (err error) {
+func GiveOrCancelLike(userId int64, goodsId int64, actionType int32) (err error) {
 	var likeList []entity.Like
-	result := global.DB.Model(&entity.Like{}).Where("user_id=? and video_id=?", userId, videoId).Find(&likeList)
+	result := global.DB.Model(&entity.Like{}).Where("user_id=? and goods_id=?", userId, goodsId).Find(&likeList)
 	if result.Error != nil {
 		return
 	}
@@ -94,62 +94,61 @@ func GiveOrCancelLike(userId int64, videoId int64, actionType int32) (err error)
 	var giveLike entity.Like
 	giveLike.LikeId = util.GetNextId()
 	giveLike.UserId = userId
-	giveLike.VideoId = videoId
+	giveLike.GoodsId = goodsId
 	if global.DB.Model(&entity.Like{}).Create(&giveLike).Error != nil {
 		return err
 	}
 	return
 }
 
-// 根据id查询点赞视频列表
-func GetLikeVideoListByUserId(userId int64, currentId int64) (videos []entity.VideoResponse, err error) {
-	//查询当前用户的点赞的视频id列表
-	likeVideoIdList, err := QueryLikeVideoIdListByUserId(currentId)
+// 根据id查询点赞商品列表
+func GetLikeGoodsListByUserId(userId int64, currentId int64) (goods []entity.GoodsResponse, err error) {
+	//查询当前用户的点赞的商品id列表
+	likeGoodsIdList, err := QueryLikeGoodsIdListByUserId(currentId)
 	if err != nil {
 		return nil, err
 	}
-	//根据视频id列表查询视频对象
-	likeVideoList, err := QueryVideoListByVideoIdList(&likeVideoIdList)
+	//根据商品id列表查询商品对象
+	likeGoodsList, err := QueryGoodsListByGoodsIdList(&likeGoodsIdList)
 	if err != nil {
 		return nil, err
 	}
-	//根据视频id列表查询点赞数量
-	likeCountList, err := QueryLikeCountListByVideoIdList(&likeVideoIdList)
+	//根据商品id列表查询点赞数量
+	likeCountList, err := QueryLikeCountListByGoodsIdList(&likeGoodsIdList)
 	if err != nil {
 		return nil, err
 	}
 	//防止数量为0,预先使用map记录
 	likeCountListMap := map[int64]int64{}
 	for _, likeCount := range likeCountList {
-		likeCountListMap[likeCount.VideoId] = likeCount.LikeCnt
+		likeCountListMap[likeCount.GoodsId] = likeCount.LikeCnt
 	}
-	//根据视频id列表查询评论数量
-	commentCountList, err := QueryCommentCountListByVideoIdList(&likeVideoIdList)
+	//根据商品id列表查询评论数量
+	commentCountList, err := QueryCommentCountListByGoodsIdList(&likeGoodsIdList)
 	if err != nil {
 		return nil, err
 	}
 	commentCountListMap := map[int64]int64{}
 	for _, likeCount := range commentCountList {
-		commentCountListMap[likeCount.VideoId] = likeCount.CommentCnt
+		commentCountListMap[likeCount.GoodsId] = likeCount.CommentCnt
 	}
-	videos = make([]entity.VideoResponse, len(likeVideoList))
-	for i, video := range likeVideoList {
-		videos[i].Id = video.VideoId
-		videos[i].Author, err = UserInfoByUserId(video.UserId)
+	goods = make([]entity.GoodsResponse, len(likeGoodsList))
+	for i, goodsItem := range likeGoodsList {
+		goods[i].Id = goodsItem.GoodsId
+		goods[i].Author, err = UserInfoByUserId(goodsItem.UserId)
 		if err != nil {
 			return nil, err
 		}
-		videos[i].Author.IsFollow, err = QueryFollowOrNot(currentId, userId)
+		goods[i].Author.IsFollow, err = QueryFollowOrNot(currentId, userId)
 		if err != nil {
 			return nil, err
 		}
-		videos[i].CoverUrl = video.CoverUrl
-		videos[i].PlayUrl = video.PlayUrl
-		videos[i].Title = video.Title
-		videos[i].IsFavorite = true
+		goods[i].PictureUrl = goodsItem.PictureUrl
+		goods[i].Title = goodsItem.Title
+		goods[i].IsFavorite = true
 		//map中没有数据则自动为0
-		videos[i].FavoriteCount = likeCountListMap[video.VideoId]
-		videos[i].CommentCount = commentCountListMap[video.VideoId]
+		goods[i].FavoriteCount = likeCountListMap[goodsItem.GoodsId]
+		goods[i].CommentCount = commentCountListMap[goodsItem.GoodsId]
 	}
 
 	return

@@ -5,7 +5,6 @@ import (
 	"blue/global"
 	"blue/service"
 	"blue/util"
-	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -13,9 +12,9 @@ import (
 	"strconv"
 )
 
-type videoListResponse struct {
+type goodsListResponse struct {
 	entity.Response
-	VideoList []entity.VideoResponse `json:"video_list"`
+	GoodsList []entity.GoodsResponse `json:"goods_list"`
 }
 
 func Publish(c *gin.Context) {
@@ -35,27 +34,25 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	// 获取视频唯一标识 id
+	// 获取商品唯一标识 id
 	node, err := snowflake.NewNode(1)
 	if err != nil {
 		//c.JSON(http.StatusOK, gin.H{"status_code": 1, "status_msg": "failed to generate snowflake"})
 		c.JSON(http.StatusBadRequest, entity.Response{
 			StatusCode: 1,
-			StatusMsg:  "failed to generate snowflake for video",
+			StatusMsg:  "failed to generate snowflake for goods",
 		})
 	}
-	videoId := node.Generate().Int64()
+	goodsId := node.Generate().Int64()
 
-	// 获取视频路径，并且把视频以及封面存放入指定位置
-	name := strconv.FormatUint(uint64(videoId), 10)
+	// 获取商品路径，并且把商品图片存放入指定位置
+	name := strconv.FormatUint(uint64(goodsId), 10)
 	//filename :=
-	videoName := name + file.Filename
-	coverName := name + ".jpg"
+	goodsName := name + file.Filename
 
-	videoSavePath := filepath.Join(global.PATH_VIDEO, videoName)
-	coverSavePath := filepath.Join(global.PATH_COVER, coverName)
+	goodsSavePath := filepath.Join(global.PATH_GOODS, goodsName)
 
-	err = c.SaveUploadedFile(file, videoSavePath)
+	err = c.SaveUploadedFile(file, goodsSavePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, entity.Response{
 			StatusCode: -1,
@@ -64,36 +61,24 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	err = service.GetCoverFromVideo(videoSavePath, coverSavePath)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusBadRequest, entity.Response{
-			StatusCode: -1,
-			StatusMsg:  "fail to create the cover.",
-		})
-		return
+	// 把商品信息生成 goods 结构体，并且存入数据库
+	pictureUrl := global.HEAD_URL + c.Request.Host + global.GOODS_URL + goodsName
+	goods := entity.Goods{
+		GoodsId:    goodsId,
+		PictureUrl: pictureUrl,
+		Title:      title,
+		UserId:     userid,
 	}
-
-	// 把视频信息生成 video 结构体，并且存入数据库
-	playUrl := global.HEAD_URL + c.Request.Host + global.VIDEO_URL + videoName
-	coverUrl := global.HEAD_URL + c.Request.Host + global.COVER_URL + coverName
-	video := entity.Video{
-		VideoId:  videoId,
-		PlayUrl:  playUrl,
-		CoverUrl: coverUrl,
-		Title:    title,
-		UserId:   userid,
-	}
-	err = global.DB.Create(&video).Error
+	err = global.DB.Create(&goods).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, entity.Response{
 			StatusCode: -1,
-			StatusMsg:  "fail to add the video into SQL",
+			StatusMsg:  "fail to add the goods into SQL",
 		})
 		return
 	}
 
-	//fmt.Printf("视频写入数据库\n")
+	//fmt.Printf("写入数据库\n")
 
 	c.JSON(http.StatusOK, entity.Response{
 		StatusCode: 0,
@@ -110,17 +95,17 @@ func PublishList(c *gin.Context) {
 		return
 	}
 	uid, _ := strconv.Atoi(c.Query("user_id"))
-	videos, err := service.GetPostVideoListByUserId(int64(uid))
+	goods, err := service.GetPostGoodsListByUserId(int64(uid))
 	if err != nil {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 2, StatusMsg: "get liked video list failed"})
+		c.JSON(http.StatusOK, entity.Response{StatusCode: 2, StatusMsg: "get liked goods list failed"})
 		return
 	}
 	//封装返回
-	c.JSON(http.StatusOK, videoListResponse{
+	c.JSON(http.StatusOK, goodsListResponse{
 		Response: entity.Response{
 			StatusCode: 0,
 			StatusMsg:  "success",
 		},
-		VideoList: videos,
+		GoodsList: goods,
 	})
 }

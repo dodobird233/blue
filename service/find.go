@@ -12,20 +12,20 @@ func FindInt64(target int64, intArr *[]int64) bool {
 	return false
 }
 
-// 在一个给定 VideoLikeCnt 列表中查找给定视频 id 是否存在，不存在返回 0，存在返回点赞值
-func FindVideoIdFromVideoLikeCntList(videoId int64, likeCountList *[]entity.VideoLikeCnt) int64 {
+// 在一个给定 GoodsLikeCnt 列表中查找给定商品 id 是否存在，不存在返回 0，存在返回点赞值
+func FindGoodsIdFromGoodsLikeCntList(goodsId int64, likeCountList *[]entity.GoodsLikeCnt) int64 {
 	for _, element := range *likeCountList {
-		if videoId == element.VideoId {
+		if goodsId == element.GoodsId {
 			return element.LikeCnt
 		}
 	}
 	return 0
 }
 
-// 在一个给定 VideoCommentCnt 列表中查找给定视频 id 是否存在，不存在返回 0，存在返回评论值
-func FindVideoIdFromVideoCommentCntList(videoId int64, commentCountList *[]entity.VideoCommentCnt) int64 {
+// 在一个给定 GoodsCommentCnt 列表中查找给定商品 id 是否存在，不存在返回 0，存在返回评论值
+func FindGoodsIdFromGoodsCommentCntList(goodsId int64, commentCountList *[]entity.GoodsCommentCnt) int64 {
 	for _, element := range *commentCountList {
-		if videoId == element.VideoId {
+		if goodsId == element.GoodsId {
 			return element.CommentCnt
 		}
 	}

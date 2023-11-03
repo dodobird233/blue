@@ -3,30 +3,11 @@ package service
 import (
 	"blue/entity"
 	"blue/global"
-	"fmt"
-	"os/exec"
 )
 
-// GetCoverFromVideo 根据视频生成封面图片
-func GetCoverFromVideo(videoPath, coverPath string) error {
-	cmd := exec.Command("ffmpeg",
-		"-i", videoPath, "-r", "1",
-		"-vframes", "1",
-		"-f", "image2",
-		coverPath,
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("生成封面失败：%s\n%s", err, output)
-	}
-
-	return nil
-}
-
-// 查询视频id列表
-func QueryVideoIdListByUserId(userId int64) (videoIdList []int64, err error) {
-	result := global.DB.Model(&entity.Video{}).Select("video_id").Where("user_id = ?", userId).Find(&videoIdList)
+// 查询商品id列表
+func QueryGoodsIdListByUserId(userId int64) (goodsIdList []int64, err error) {
+	result := global.DB.Model(&entity.Goods{}).Select("goods_id").Where("user_id = ?", userId).Find(&goodsIdList)
 	if result.Error != nil {
 		err = result.Error
 		return nil, err
@@ -34,62 +15,61 @@ func QueryVideoIdListByUserId(userId int64) (videoIdList []int64, err error) {
 	return
 }
 
-// 查询视频对象列表
-func QueryVideoListByUserId(userId int64) (videoList []entity.Video, err error) {
-	if global.DB.Where("user_id = ?", userId).Find(&videoList).Error != nil {
+// 查询商品对象列表
+func QueryGoodsListByUserId(userId int64) (goodsList []entity.Goods, err error) {
+	if global.DB.Where("user_id = ?", userId).Find(&goodsList).Error != nil {
 		return
 	}
 	return
 }
 
-// 查询视频封装返回对象列表
-func GetPostVideoListByUserId(userId int64) (videos []entity.VideoResponse, err error) {
-	//查询视频对象列表
-	videoList, err := QueryVideoListByUserId(userId)
+// 查询商品封装返回对象列表
+func GetPostGoodsListByUserId(userId int64) (goods []entity.GoodsResponse, err error) {
+	//查询商品对象列表
+	goodsList, err := QueryGoodsListByUserId(userId)
 	if err != nil {
 		return nil, err
 	}
-	//构造视频id列表
-	videoIdList := make([]int64, len(videoList))
-	for i, video := range videoList {
-		videoIdList[i] = video.VideoId
+	//构造商品id列表
+	goodsIdList := make([]int64, len(goodsList))
+	for i, goodsItem := range goodsList {
+		goodsIdList[i] = goodsItem.GoodsId
 	}
-	//根据视频id列表查询点赞数量
-	likeCountList, err := QueryLikeCountListByVideoIdList(&videoIdList)
+	//根据商品id列表查询点赞数量
+	likeCountList, err := QueryLikeCountListByGoodsIdList(&goodsIdList)
 	if err != nil {
 		return nil, err
 	}
 	likeCountListMap := map[int64]int64{}
 	for _, likeCount := range likeCountList {
-		likeCountListMap[likeCount.VideoId] = likeCount.LikeCnt
+		likeCountListMap[likeCount.GoodsId] = likeCount.LikeCnt
 	}
-	//根据视频id列表查询评论数量
-	commentCountList, err := QueryCommentCountListByVideoIdList(&videoIdList)
+	//根据商品id列表查询评论数量
+	commentCountList, err := QueryCommentCountListByGoodsIdList(&goodsIdList)
 	if err != nil {
 		return nil, err
 	}
 	commentCountListMap := map[int64]int64{}
 	for _, likeCount := range commentCountList {
-		commentCountListMap[likeCount.VideoId] = likeCount.CommentCnt
+		commentCountListMap[likeCount.GoodsId] = likeCount.CommentCnt
 	}
-	videos = make([]entity.VideoResponse, len(videoList))
-	for i, video := range videoList {
-		videos[i].Id = video.VideoId
-		videos[i].Author, err = UserInfoByUserId(video.UserId)
+	goods = make([]entity.GoodsResponse, len(goodsList))
+	for i, goodsItem := range goodsList {
+		goods[i].Id = goodsItem.GoodsId
+		goods[i].Author, err = UserInfoByUserId(goodsItem.UserId)
 		if err != nil {
 			return nil, err
 		}
 		//仅有登录用户自己
-		videos[i].Author.IsFollow, err = QueryFollowOrNot(userId, userId)
+		goods[i].Author.IsFollow, err = QueryFollowOrNot(userId, userId)
 		if err != nil {
 			return nil, err
 		}
-		videos[i].CoverUrl = video.CoverUrl
-		videos[i].PlayUrl = video.PlayUrl
-		videos[i].Title = video.Title
-		videos[i].IsFavorite = true
-		videos[i].FavoriteCount = likeCountListMap[video.VideoId]
-		videos[i].CommentCount = commentCountListMap[video.VideoId]
+		goods[i].PictureUrl = goodsItem.PictureUrl
+		goods[i].Title = goodsItem.Title
+		goods[i].IsFavorite = true
+		goods[i].FavoriteCount = likeCountListMap[goodsItem.GoodsId]
+		goods[i].CommentCount = commentCountListMap[goodsItem.GoodsId]
 	}
 	return
 }
