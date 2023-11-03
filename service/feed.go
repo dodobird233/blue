@@ -1,8 +1,8 @@
 package service
 
 import (
-	"tiktop/entity"
-	"tiktop/global"
+	"blue/entity"
+	"blue/global"
 )
 
 // GetNumVideo 获取视频列表中符合结果的视频数据，以及相应的视频，作者信息列表

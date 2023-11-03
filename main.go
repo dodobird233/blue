@@ -1,9 +1,9 @@
 package main
 
 import (
+	"blue/initialize"
 	"github.com/gin-gonic/gin"
 	"os"
-	"tiktop/initialize"
 )
 
 func main() {

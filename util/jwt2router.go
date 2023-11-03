@@ -1,9 +1,9 @@
 package util
 
 import (
+	"blue/entity"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"tiktop/entity"
 )
 
 func Jwt2r() gin.HandlerFunc {

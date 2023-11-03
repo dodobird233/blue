@@ -1,10 +1,10 @@
 package service
 
 import (
+	"blue/entity"
+	"blue/global"
+	"blue/util"
 	"errors"
-	"tiktop/entity"
-	"tiktop/global"
-	"tiktop/util"
 	"time"
 )
 

@@ -1,13 +1,13 @@
 package controller
 
 import (
+	"blue/entity"
+	"blue/global"
+	"blue/service"
+	"blue/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"tiktop/entity"
-	"tiktop/global"
-	"tiktop/service"
-	"tiktop/util"
 	"time"
 )
 

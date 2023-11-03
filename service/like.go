@@ -1,11 +1,11 @@
 package service
 
 import (
+	"blue/entity"
+	"blue/global"
+	"blue/util"
 	"errors"
 	"sort"
-	"tiktop/entity"
-	"tiktop/global"
-	"tiktop/util"
 )
 
 // 获取每个视频的点赞数量

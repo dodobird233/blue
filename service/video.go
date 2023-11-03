@@ -1,10 +1,10 @@
 package service
 
 import (
+	"blue/entity"
+	"blue/global"
 	"fmt"
 	"os/exec"
-	"tiktop/entity"
-	"tiktop/global"
 )
 
 // GetCoverFromVideo 根据视频生成封面图片

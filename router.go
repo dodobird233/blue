@@ -1,15 +1,15 @@
 package main
 
 import (
+	"blue/controller"
 	"github.com/gin-gonic/gin"
-	"tiktop/controller"
 )
 
 func initRouter(r *gin.Engine) {
 	// public directory is used to serve static resources
 	r.Static("/static", "./public")
 
-	apiRouter := r.Group("/douyin")
+	apiRouter := r.Group("/blue")
 
 	//apiRouter.GET("/feed/", controller.Feed)
 	apiRouter.GET("/user/", controller.UserInfo)

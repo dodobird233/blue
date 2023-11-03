@@ -1,16 +1,16 @@
 package controller
 
 import (
+	"blue/entity"
+	"blue/global"
+	"blue/service"
+	"blue/util"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"tiktop/entity"
-	"tiktop/global"
-	"tiktop/service"
-	"tiktop/util"
 )
 
 type videoListResponse struct {

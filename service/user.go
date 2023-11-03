@@ -1,10 +1,10 @@
 package service
 
 import (
+	"blue/entity"
+	"blue/global"
 	"errors"
 	"github.com/bwmarrin/snowflake"
-	"tiktop/entity"
-	"tiktop/global"
 )
 
 func IsUserIdExist(userId int64) (flag bool, err error) {

@@ -1,12 +1,12 @@
 package controller
 
 import (
+	"blue/entity"
+	"blue/service"
+	"blue/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"tiktop/entity"
-	"tiktop/service"
-	"tiktop/util"
 )
 
 type UserLoginResponse struct {

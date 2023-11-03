@@ -1,11 +1,11 @@
 package initialize
 
 import (
+	"blue/entity"
+	"blue/global"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"tiktop/entity"
-	"tiktop/global"
 )
 
 func InitDB() error {

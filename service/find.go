@@ -1,6 +1,6 @@
 package service
 
-import "tiktop/entity"
+import "blue/entity"
 
 // 在一个给定的 int64 数组中查找给定元素
 func FindInt64(target int64, intArr *[]int64) bool {

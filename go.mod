@@ -1,4 +1,4 @@
-module tiktop
+module blue
 
 go 1.20
 
