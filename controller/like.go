@@ -12,7 +12,7 @@ import (
 // 点赞和取消赞操作
 func FavoriteAction(c *gin.Context) {
 	token := c.Query("token")
-	videoId, _ := strconv.Atoi(c.Query("video_id"))
+	goodsId, _ := strconv.Atoi(c.Query("goods_id"))
 	actionType, _ := strconv.Atoi(c.Query("action_type"))
 	claims, err := util.Gettoken(token)
 	if err != nil {
@@ -20,7 +20,7 @@ func FavoriteAction(c *gin.Context) {
 		return
 	}
 	currentId, _ := strconv.Atoi(claims.UserId)
-	err = service.GiveOrCancelLike(int64(currentId), int64(videoId), int32(actionType))
+	err = service.GiveOrCancelLike(int64(currentId), int64(goodsId), int32(actionType))
 	if err != nil {
 		c.JSON(http.StatusOK, entity.Response{StatusCode: 2, StatusMsg: "like action failed"})
 		return
@@ -39,9 +39,9 @@ func FavoriteList(c *gin.Context) {
 	currentId, _ := strconv.Atoi(claims.UserId)
 	//获取目标用户id
 	uid, _ := strconv.Atoi(c.Query("user_id"))
-	videos, err := service.GetLikeVideoListByUserId(int64(uid), int64(currentId))
+	goodsList, err := service.GetLikeGoodsListByUserId(int64(uid), int64(currentId))
 	if err != nil {
-		c.JSON(http.StatusOK, entity.Response{StatusCode: 2, StatusMsg: "get liked video list failed"})
+		c.JSON(http.StatusOK, entity.Response{StatusCode: 2, StatusMsg: "get liked goods list failed"})
 		return
 	}
 	//封装返回
@@ -50,6 +50,6 @@ func FavoriteList(c *gin.Context) {
 			StatusCode: 0,
 			StatusMsg:  "success",
 		},
-		VideoList: videos,
+		GoodsList: goodsList,
 	})
 }

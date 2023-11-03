@@ -6,13 +6,12 @@ type Response struct {
 }
 type FavoriteListResponse struct {
 	Response
-	VideoList []VideoResponse `json:"video_list"`
+	GoodsList []GoodsResponse `json:"goods_list"`
 }
-type VideoResponse struct {
+type GoodsResponse struct {
 	Id            int64    `json:"id"`
 	Author        UserData `json:"author"`
-	PlayUrl       string   `json:"play_url"`
-	CoverUrl      string   `json:"cover_url"`
+	PictureUrl    string   `json:"picture_url"`
 	FavoriteCount int64    `json:"favorite_count"`
 	CommentCount  int64    `json:"comment_count"`
 	IsFavorite    bool     `json:"is_favorite"`

@@ -13,7 +13,7 @@ import (
 
 type feedResponse struct {
 	Response  entity.Response
-	VideoList []entity.VideoResponse `json:"video_list,omitempty"`
+	GoodsList []entity.GoodsResponse `json:"goods_list,omitempty"`
 	NextTime  int64                  `json:"next_time,omitempty"`
 }
 
@@ -33,51 +33,51 @@ func Feed(c *gin.Context) {
 		LastTime = CurrentTime
 	}
 
-	// 判断此时的视频列表是否为空
-	var videoList []entity.Video
-	var videoIdList []int64
+	// 判断此时的商品列表是否为空
+	var goodsList []entity.Goods
+	var goodsIdList []int64
 	var authorIdList []int64
-	numVideo, err := service.GetNumVideo(&videoList, &videoIdList, &authorIdList, LastTime, global.MaxNumVideo)
+	numGoods, err := service.GetNumGoods(&goodsList, &goodsIdList, &authorIdList, LastTime, global.MaxNumGoods)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status_code": -1, "status_msg": "Fail to get the number of video."})
+		c.JSON(http.StatusBadRequest, gin.H{"status_code": -1, "status_msg": "Fail to get the number of goods."})
 		return
 	}
-	//fmt.Println(numVideo)
+	//fmt.Println(numGoods)
 
 	// 如果是空的
-	if numVideo == 0 {
-		// 没有满足条件的视频
+	if numGoods == 0 {
+		// 没有满足条件的商品
 		c.JSON(http.StatusOK, feedResponse{
 			Response:  entity.Response{StatusCode: 0, StatusMsg: "null"},
-			VideoList: nil,
+			GoodsList: nil,
 			NextTime:  CurrentTime,
 		})
 		return
 	}
 
 	// 点赞信息获得
-	LikeVideoList, errLike := service.QueryLikeCountListByVideoIdList(&videoIdList)
+	LikeGoodsList, errLike := service.QueryLikeCountListByGoodsIdList(&goodsIdList)
 	if errLike != nil {
 		c.JSON(http.StatusNotFound, feedResponse{
-			Response:  entity.Response{StatusCode: 1, StatusMsg: "Fail to get liked count for videos."},
-			VideoList: nil,
+			Response:  entity.Response{StatusCode: 1, StatusMsg: "Fail to get liked count for goods."},
+			GoodsList: nil,
 			NextTime:  LastTime,
 		})
 		return
 	}
-	//fmt.Println(LikeVideoList)
+	//fmt.Println(LikeGoodsList)
 
 	// 评论信息获得
-	CommentVideoList, errComment := service.QueryCommentCountListByVideoIdList(&videoIdList)
+	CommentGoodsList, errComment := service.QueryCommentCountListByGoodsIdList(&goodsIdList)
 	if errComment != nil {
 		c.JSON(http.StatusNotFound, feedResponse{
-			Response:  entity.Response{StatusCode: 1, StatusMsg: "Fail to get comment count for videos."},
-			VideoList: nil,
+			Response:  entity.Response{StatusCode: 1, StatusMsg: "Fail to get comment count for goods."},
+			GoodsList: nil,
 			NextTime:  LastTime,
 		})
 		return
 	}
-	//fmt.Println(CommentVideoList)
+	//fmt.Println(CommentGoodsList)
 
 	// 点赞与否
 	// 登录状态判断
@@ -94,7 +94,7 @@ func Feed(c *gin.Context) {
 			if err != nil {
 				c.JSON(http.StatusBadRequest, feedResponse{
 					Response:  entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-					VideoList: nil,
+					GoodsList: nil,
 					NextTime:  LastTime,
 				})
 				return
@@ -110,11 +110,11 @@ func Feed(c *gin.Context) {
 
 	if isLogged {
 		// 点赞列表
-		isFavoriteList, err = service.ParseLikeVideoListByUserIdFormVideoId(userid, &videoIdList)
+		isFavoriteList, err = service.ParseLikeGoodsListByUserIdFormGoodsId(userid, &goodsIdList)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, feedResponse{
 				Response:  entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-				VideoList: nil,
+				GoodsList: nil,
 				NextTime:  LastTime,
 			})
 			return
@@ -124,7 +124,7 @@ func Feed(c *gin.Context) {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, feedResponse{
 				Response:  entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-				VideoList: nil,
+				GoodsList: nil,
 				NextTime:  LastTime,
 			})
 			return
@@ -135,20 +135,20 @@ func Feed(c *gin.Context) {
 
 	// 初始化列表信息
 	var (
-		videoJsonList []entity.VideoResponse
-		videoJson     entity.VideoResponse
+		goodsJsonList []entity.GoodsResponse
+		goodsJson     entity.GoodsResponse
 		author        entity.UserData
 	)
 
 	// 填充输出信息
-	for i, video := range videoList {
+	for i, goods := range goodsList {
 		// author 获取
 		author, err = service.UserInfoByUserId(authorIdList[i])
 		if err != nil {
 			//fmt.Println("Not found user")
 			c.JSON(http.StatusNotFound, feedResponse{
 				Response:  entity.Response{StatusCode: 1, StatusMsg: err.Error()},
-				VideoList: nil,
+				GoodsList: nil,
 				NextTime:  LastTime,
 			})
 			return
@@ -161,23 +161,22 @@ func Feed(c *gin.Context) {
 		}
 
 		// 信息填充
-		videoJson.Id = video.VideoId
-		videoJson.Author = author
-		videoJson.PlayUrl = video.PlayUrl
-		videoJson.CoverUrl = video.CoverUrl
-		videoJson.FavoriteCount = LikeVideoList[i].LikeCnt
-		videoJson.CommentCount = CommentVideoList[i].CommentCnt
-		videoJson.IsFavorite = isFavorite
-		videoJson.Title = video.Title
+		goodsJson.Id = goods.GoodsId
+		goodsJson.Author = author
+		goodsJson.PictureUrl = goods.PictureUrl
+		goodsJson.FavoriteCount = LikeGoodsList[i].LikeCnt
+		goodsJson.CommentCount = CommentGoodsList[i].CommentCnt
+		goodsJson.IsFavorite = isFavorite
+		goodsJson.Title = goods.Title
 
-		videoJsonList = append(videoJsonList, videoJson)
+		goodsJsonList = append(goodsJsonList, goodsJson)
 	}
 
-	nextTime := videoList[numVideo-1].CreatedAt.Unix()
-	// 输出视频流
+	nextTime := goodsList[numGoods-1].CreatedAt.Unix()
+	// 输出商品流
 	c.JSON(http.StatusOK, feedResponse{
 		Response:  entity.Response{StatusCode: 0, StatusMsg: "null"},
-		VideoList: videoJsonList,
+		GoodsList: goodsJsonList,
 		NextTime:  nextTime,
 	})
 }

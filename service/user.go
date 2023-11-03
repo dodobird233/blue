@@ -59,13 +59,13 @@ func UserInfoByUserId(userId int64) (userdata entity.UserData, err error) {
 	global.DB.Model(&entity.Follow{}).Where("user_id = ?", userId).Count(&userdata.FollowCount)
 	global.DB.Model(&entity.Follow{}).Where("follow_userid = ?", userId).Count(&userdata.FollowerCount)
 	global.DB.Model(&entity.Like{}).Where("user_id = ?", userId).Count(&userdata.FavoriteCount)
-	videoIdList, err1 := QueryVideoIdListByUserId(userId)
+	goodsIdList, err1 := QueryGoodsIdListByUserId(userId)
 	if err1 != nil {
 		err = err1
 		return
 	}
-	userdata.WorkCount = int64(len(videoIdList))
-	likesList, err2 := QueryLikeCountListByVideoIdList(&videoIdList)
+	userdata.WorkCount = int64(len(goodsIdList))
+	likesList, err2 := QueryLikeCountListByGoodsIdList(&goodsIdList)
 	if err2 != nil {
 		err = err2
 		return
