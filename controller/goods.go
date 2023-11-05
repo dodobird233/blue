@@ -8,7 +8,6 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"path/filepath"
 	"strconv"
 )
 
@@ -23,16 +22,9 @@ func Publish(c *gin.Context) {
 	claims, _ := util.Gettoken(token)
 	userid, _ := strconv.ParseInt(claims.UserId, 10, 64)
 	title := c.PostForm("title")
-
+	desc := c.PostForm("description")
+	urls := c.PostForm("picture_urls")
 	// 获取文件
-	file, err := c.FormFile("data")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, entity.Response{
-			StatusCode: -1,
-			StatusMsg:  "fail to upload the file.",
-		})
-		return
-	}
 
 	// 获取商品唯一标识 id
 	node, err := snowflake.NewNode(1)
@@ -45,29 +37,15 @@ func Publish(c *gin.Context) {
 	}
 	goodsId := node.Generate().Int64()
 
-	// 获取商品路径，并且把商品图片存放入指定位置
-	name := strconv.FormatUint(uint64(goodsId), 10)
-	//filename :=
-	goodsName := name + file.Filename
+	// 商品图片存入数据库
+	service.SavePictureUrls(urls)
 
-	goodsSavePath := filepath.Join(global.PATH_GOODS, goodsName)
-
-	err = c.SaveUploadedFile(file, goodsSavePath)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, entity.Response{
-			StatusCode: -1,
-			StatusMsg:  "fail to save the file to the path.",
-		})
-		return
-	}
-
-	// 把商品信息生成 goods 结构体，并且存入数据库
-	pictureUrl := global.HEAD_URL + c.Request.Host + global.GOODS_URL + goodsName
 	goods := entity.Goods{
-		GoodsId:    goodsId,
-		PictureUrl: pictureUrl,
-		Title:      title,
-		UserId:     userid,
+		GoodsId:     goodsId,
+		PictureUrl:  urls,
+		Description: desc,
+		Title:       title,
+		UserId:      userid,
 	}
 	err = global.DB.Create(&goods).Error
 	if err != nil {
