@@ -164,6 +164,7 @@ func Feed(c *gin.Context) {
 		goodsJson.Id = goods.GoodsId
 		goodsJson.Author = author
 		goodsJson.PictureUrl = goods.PictureUrl
+		goodsJson.Description = goods.Description
 		goodsJson.FavoriteCount = LikeGoodsList[i].LikeCnt
 		goodsJson.CommentCount = CommentGoodsList[i].CommentCnt
 		goodsJson.IsFavorite = isFavorite

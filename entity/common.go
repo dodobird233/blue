@@ -12,6 +12,7 @@ type GoodsResponse struct {
 	Id            int64    `json:"id"`
 	Author        UserData `json:"author"`
 	PictureUrl    string   `json:"picture_url"`
+	Description   string   `json:"description"`
 	FavoriteCount int64    `json:"favorite_count"`
 	CommentCount  int64    `json:"comment_count"`
 	IsFavorite    bool     `json:"is_favorite"`

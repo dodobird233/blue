@@ -11,7 +11,7 @@ type MyClaims struct {
 	jwt.RegisteredClaims
 }
 
-var MySecret = []byte("字节后端小分队")
+var MySecret = []byte("blue_golang")
 
 // 生成token
 func CreateToken(userId string, password string) (string, error) {
@@ -22,7 +22,7 @@ func CreateToken(userId string, password string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(1) * 8)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "字节后端小分队",
+			Issuer:    "blue_golang",
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

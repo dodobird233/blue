@@ -66,10 +66,15 @@ func GetPostGoodsListByUserId(userId int64) (goods []entity.GoodsResponse, err e
 			return nil, err
 		}
 		goods[i].PictureUrl = goodsItem.PictureUrl
+		goods[i].Description = goodsItem.Description
 		goods[i].Title = goodsItem.Title
 		goods[i].IsFavorite = true
 		goods[i].FavoriteCount = likeCountListMap[goodsItem.GoodsId]
 		goods[i].CommentCount = commentCountListMap[goodsItem.GoodsId]
 	}
 	return
+}
+
+func SavePictureUrls(urls string) {
+	// todo 存到oss
 }

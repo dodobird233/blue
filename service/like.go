@@ -144,6 +144,7 @@ func GetLikeGoodsListByUserId(userId int64, currentId int64) (goods []entity.Goo
 			return nil, err
 		}
 		goods[i].PictureUrl = goodsItem.PictureUrl
+		goods[i].Description = goodsItem.Description
 		goods[i].Title = goodsItem.Title
 		goods[i].IsFavorite = true
 		//map中没有数据则自动为0
