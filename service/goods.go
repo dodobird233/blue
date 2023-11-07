@@ -102,7 +102,7 @@ func SavePictureUrls(savePath []string, pictureName []string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		urls += "https://oss-cn-hangzhou.aliyuncs.com/" + bucketName + "/" + pictureName[i]
+		urls += "https://oss-cn-hangzhou.aliyuncs.com/" + bucketName + "/" + pictureName[i] + ","
 
 	}
 	return urls, nil

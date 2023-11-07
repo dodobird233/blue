@@ -5,6 +5,7 @@ import (
 	"blue/global"
 	"errors"
 	"github.com/bwmarrin/snowflake"
+	"log"
 )
 
 func IsUserIdExist(userId int64) (flag bool, err error) {
@@ -19,6 +20,9 @@ func IsUserIdExist(userId int64) (flag bool, err error) {
 
 func Register(username string, password string) (user *entity.User, err error) {
 	//判断用户名是否存在
+	//log.Print("fuck")
+	//log.Print(username)
+	//log.Print(password)
 	result := global.DB.Model(&entity.User{}).Where("user_name = ?", username).First(&user)
 	if result.RowsAffected != 0 {
 		err = errors.New("username already exists")
@@ -31,6 +35,8 @@ func Register(username string, password string) (user *entity.User, err error) {
 		err = errors.New("userID generate failed")
 		return
 	}
+
+	log.Print(username)
 	user.UserId = node.Generate().Int64()
 	err = global.DB.Create(user).Error //存储到数据库
 	return

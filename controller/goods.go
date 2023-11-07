@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -59,7 +60,7 @@ func Publish(c *gin.Context) {
 		savePath = append(pictureName, filepath.Join("./public/goods/", name+files[i].Filename))
 		err = c.SaveUploadedFile(files[i], filepath.Join("./public/goods/", name+files[i].Filename)) //库函数保存文件到public目录下
 		if err != nil {
-			c.JSON(http.StatusBadRequest, entity.Response{
+			c.JSON(http.StatusInternalServerError, entity.Response{
 				StatusCode: -1,
 				StatusMsg:  "fail to save the file to the path.",
 			})
@@ -71,7 +72,6 @@ func Publish(c *gin.Context) {
 	// todo end
 	// 商品图片存入oss,返回拼接的url
 	urls, err := service.SavePictureUrls(savePath, pictureName) // ok
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, entity.Response{
 			StatusCode: -1,
@@ -79,6 +79,17 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
+	for _, pa := range savePath {
+		err = os.Remove(pa)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, entity.Response{
+				StatusCode: -1,
+				StatusMsg:  "fail to delete the file.",
+			})
+			return
+		}
+	}
+
 	goods := entity.Goods{
 		GoodsId:     goodsId,
 		PictureUrl:  urls,
