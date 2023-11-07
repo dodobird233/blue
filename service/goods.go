@@ -87,7 +87,7 @@ func SavePictureUrls(savePath []string, pictureName []string) (string, error) {
 		localFileName := savePath[i]
 
 		// 创建OSSClient实例
-		client, err := oss.New("https://oss-cn-hangzhou.aliyuncs.com", "", "")
+		client, err := oss.New("https://oss-cn-hangzhou.aliyuncs.com", global.ACCESS_KEY_ID, global.ACCESS_SEC)
 		if err != nil {
 			return "", err
 		}
@@ -102,8 +102,10 @@ func SavePictureUrls(savePath []string, pictureName []string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		urls += "https://oss-cn-hangzhou.aliyuncs.com/" + bucketName + "/" + pictureName[i]
-
+		urls += "https://blue-project.oss-cn-hangzhou.aliyuncs.com/" + pictureName[i]
+		if i != len(savePath)-1 {
+			urls += ","
+		}
 	}
 	return urls, nil
 }

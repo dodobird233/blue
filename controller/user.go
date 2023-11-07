@@ -21,8 +21,8 @@ type UserResponse struct {
 }
 
 func Register(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
+	username := c.PostForm("username")
+	password := c.PostForm("password")
 	user, err := service.Register(username, password)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"status_code": 1, "status_msg": "register failed"})
@@ -39,8 +39,8 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-	username := c.Query("username")
-	password := c.Query("password")
+	username := c.PostForm("username")
+	password := c.PostForm("password")
 	// 从数据库查询用户信息
 	user, err := service.Login(username, password)
 	if err != nil {
