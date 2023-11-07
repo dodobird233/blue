@@ -5,9 +5,12 @@ import (
 	"blue/global"
 	"blue/service"
 	"blue/util"
+	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 )
 
@@ -23,9 +26,6 @@ func Publish(c *gin.Context) {
 	userid, _ := strconv.ParseInt(claims.UserId, 10, 64)
 	title := c.PostForm("title")
 	desc := c.PostForm("description")
-	urls := c.PostForm("picture_urls")
-	// 获取文件
-
 	// 获取商品唯一标识 id
 	node, err := snowflake.NewNode(1)
 	if err != nil {
@@ -35,11 +35,50 @@ func Publish(c *gin.Context) {
 			StatusMsg:  "failed to generate snowflake for goods",
 		})
 	}
-	goodsId := node.Generate().Int64()
+	var pictureName []string
+	var savePath []string
 
-	// 商品图片存入数据库
-	service.SavePictureUrls(urls)
+	goodsId := node.Generate().Int64()              //生成唯一id
+	name := strconv.FormatUint(uint64(goodsId), 10) //生成唯一name
 
+	// todo begin
+	// 获取文件
+	r := c.Request
+	//设置内存大小
+	r.ParseMultipartForm(32 << 20)
+	//获取上传的文件组
+	files := r.MultipartForm.File["picture"]
+	for i := 0; i < len(files); i++ {
+		//打开上传文件
+		file, err := files[i].Open()
+		defer file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		pictureName = append(pictureName, name+files[i].Filename)
+		savePath = append(pictureName, filepath.Join("./public/goods/", name+files[i].Filename))
+		err = c.SaveUploadedFile(files[i], filepath.Join("./public/goods/", name+files[i].Filename)) //库函数保存文件到public目录下
+		if err != nil {
+			c.JSON(http.StatusBadRequest, entity.Response{
+				StatusCode: -1,
+				StatusMsg:  "fail to save the file to the path.",
+			})
+			return
+		}
+		//debug
+		fmt.Println(files[i].Filename) //输出上传的文件名
+	}
+	// todo end
+	// 商品图片存入oss,返回拼接的url
+	urls, err := service.SavePictureUrls(savePath, pictureName) // ok
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, entity.Response{
+			StatusCode: -1,
+			StatusMsg:  "fail to upload pi",
+		})
+		return
+	}
 	goods := entity.Goods{
 		GoodsId:     goodsId,
 		PictureUrl:  urls,
