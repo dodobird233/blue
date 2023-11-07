@@ -3,6 +3,7 @@ package service
 import (
 	"blue/entity"
 	"blue/global"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
 // 查询商品id列表
@@ -75,6 +76,34 @@ func GetPostGoodsListByUserId(userId int64) (goods []entity.GoodsResponse, err e
 	return
 }
 
-func SavePictureUrls(urls string) {
-	// todo 存到oss
+func SavePictureUrls(savePath []string, pictureName []string) (string, error) {
+	// 存储空间名称
+	bucketName := "blue-project"
+	urls := ""
+	for i := range savePath {
+		// Object完整路径，完整路径不包含Bucket名称
+		objectName := pictureName[i]
+		// 本地文件的完整路径
+		localFileName := savePath[i]
+
+		// 创建OSSClient实例
+		client, err := oss.New("https://oss-cn-hangzhou.aliyuncs.com", "", "")
+		if err != nil {
+			return "", err
+		}
+
+		// 获取存储空间
+		bucket, err := client.Bucket(bucketName)
+		if err != nil {
+			return "", err
+		}
+		// 上传文件
+		err = bucket.PutObjectFromFile(objectName, localFileName)
+		if err != nil {
+			return "", err
+		}
+		urls += "https://oss-cn-hangzhou.aliyuncs.com/" + bucketName + "/" + pictureName[i]
+
+	}
+	return urls, nil
 }
