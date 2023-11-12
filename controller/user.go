@@ -23,7 +23,6 @@ type UserResponse struct {
 func Register(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
-	//log.Print("username in controller %s ", username)
 	user, err := service.Register(username, password)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"status_code": 1, "status_msg": "register failed"})

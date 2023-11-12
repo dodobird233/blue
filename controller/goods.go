@@ -5,13 +5,11 @@ import (
 	"blue/global"
 	"blue/service"
 	"blue/util"
-	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 )
 
@@ -42,7 +40,6 @@ func Publish(c *gin.Context) {
 	goodsId := node.Generate().Int64()              //生成唯一id
 	name := strconv.FormatUint(uint64(goodsId), 10) //生成唯一name
 
-	// todo begin
 	// 获取文件
 	r := c.Request
 	//设置内存大小
@@ -57,25 +54,32 @@ func Publish(c *gin.Context) {
 			log.Fatal(err)
 		}
 		pictureName = append(pictureName, name+files[i].Filename)
-		savePath = append(pictureName, filepath.Join("./public/goods/", name+files[i].Filename))
-		err = c.SaveUploadedFile(files[i], filepath.Join("./public/goods/", name+files[i].Filename)) //库函数保存文件到public目录下
+		savePath = append(savePath, "./public/goods/"+name+files[i].Filename)
+		err = c.SaveUploadedFile(files[i], "./public/goods/"+name+files[i].Filename) //库函数保存文件到public目录下
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, entity.Response{
 				StatusCode: -1,
 				StatusMsg:  "fail to save the file to the path.",
 			})
+			for _, pa := range savePath {
+				err = os.Remove(pa)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, entity.Response{
+						StatusCode: -1,
+						StatusMsg:  "fail to delete the file.",
+					})
+					return
+				}
+			}
 			return
 		}
-		//debug
-		fmt.Println(files[i].Filename) //输出上传的文件名
 	}
-	// todo end
 	// 商品图片存入oss,返回拼接的url
 	urls, err := service.SavePictureUrls(savePath, pictureName) // ok
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, entity.Response{
 			StatusCode: -1,
-			StatusMsg:  "fail to upload pi",
+			StatusMsg:  "fail to upload pictures",
 		})
 		return
 	}
@@ -106,11 +110,9 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	//fmt.Printf("写入数据库\n")
-
 	c.JSON(http.StatusOK, entity.Response{
 		StatusCode: 0,
-		StatusMsg:  "null",
+		StatusMsg:  "success",
 	})
 }
 

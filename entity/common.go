@@ -63,3 +63,16 @@ type FollowListResponse struct {
 	Response Response
 	UserList []UserData `json:"user_list"`
 }
+
+var (
+	Header               = ""
+	UserPattern          = "user:%d"
+	UserFavoritePattern  = "Favorite:%d"
+	CelebrityPattern     = "Celebrity:%d"
+	FollowerPattern      = "Follower:%d"
+	GoodsPattern         = "Goods:%d"
+	CommentPattern       = "Comment:%d"
+	GoodsCommentsPattern = "CommentsOfGoods:%d"
+	PublishPattern       = "Publish:%d"
+	EmptyPattern         = "Empty:%d"
+)
