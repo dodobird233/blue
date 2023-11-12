@@ -51,6 +51,16 @@ func Login(username string, password string) (user *entity.User, err error) {
 	return
 }
 func UserInfoByUserId(userId int64) (userdata entity.UserData, err error) {
+	// 查询缓存
+	var puserdata *entity.UserData
+	puserdata, err = GetUserInfoByUserIDFromRedis(userId)
+	if err == nil {
+		userdata = *puserdata
+		return
+	} else if err.Error() != "not found in cache" {
+		return
+	}
+
 	var user entity.User
 	result := global.DB.Where("user_id = ?", userId).First(&user)
 	if result.RowsAffected == 0 {
@@ -84,6 +94,9 @@ func UserInfoByUserId(userId int64) (userdata entity.UserData, err error) {
 
 	// 默认未登录为 false, 交由接口处理
 	userdata.IsFollow = false
-
+	// 更新缓存
+	if err = AddUserInfoByUserIDFromCacheToRedis(&userdata); err != nil {
+		return userdata, err
+	}
 	return
 }
