@@ -3,7 +3,9 @@ package initialize
 import (
 	"blue/entity"
 	"blue/global"
+	"blue/service"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -26,4 +28,21 @@ func InitDB() error {
 	//db.Create(&u1) //创建
 	global.DB = db
 	return nil
+}
+func initRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", global.RedisHost, global.RedisPort),
+		Password: global.RedisPwd,
+		DB:       global.RedisDb,
+		PoolSize: global.RedisPoolSize,
+	})
+	// 检查 Redis 连通性
+	if _, err := rdb.Ping(global.CONTEXT).Result(); err != nil {
+		panic(err.Error())
+	}
+	global.REDIS = rdb
+	//先查询 feed,导入缓存
+	if err := service.GoFeed(); err != nil {
+		panic(err.Error())
+	}
 }

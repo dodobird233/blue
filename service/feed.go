@@ -7,6 +7,9 @@ import (
 
 // GetNumGoods 获取商品列表中符合结果的商品数据，以及相应的商品，作者信息列表
 func GetNumGoods(goods *[]entity.Goods, goodsIdList *[]int64, AuthorIdList *[]int64, LastTime int64, MaxNumGoods int) (int, error) {
+	if err := GoFeed(); err != nil {
+		return 0, err
+	}
 	query := global.DB.Order("created_at desc").
 		Limit(MaxNumGoods).
 		Where("UNIX_TIMESTAMP(created_at) <= ?", LastTime)

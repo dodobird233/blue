@@ -3,12 +3,12 @@ package entity
 import "time"
 
 type Goods struct {
-	GoodsId     int64     `gorm:"column:goods_id;primary_key;NOT NULL"`
-	PictureUrl  string    `gorm:"column:picture_url;type:varchar(500)"`
-	Description string    `gorm:"column:description;type:varchar(500)"`
-	Title       string    `gorm:"column:title;type:varchar(100)"`
-	UserId      int64     `gorm:"column:user_id;NOT NULL"`
-	CreatedAt   time.Time `gorm:"column:created_at;index"`
+	GoodsId     int64     `gorm:"column:goods_id;primary_key;NOT NULL" redis:"-"`
+	PictureUrl  string    `gorm:"column:picture_url;type:varchar(500)" redis:"picture_url"`
+	Description string    `gorm:"column:description;type:varchar(500)" redis:"description"`
+	Title       string    `gorm:"column:title;type:varchar(100)" redis:"title"`
+	UserId      int64     `gorm:"column:user_id;NOT NULL" redis:"user_id"`
+	CreatedAt   time.Time `gorm:"column:created_at;index" redis:"-"`
 }
 
 type GoodsLikeCnt struct {
