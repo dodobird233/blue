@@ -66,7 +66,7 @@ type FollowListResponse struct {
 
 var (
 	Header               = ""
-	UserPattern          = "user:%d"
+	UserDataPattern      = "user:%d"
 	UserFavoritePattern  = "Favorite:%d"
 	CelebrityPattern     = "Celebrity:%d"
 	FollowerPattern      = "Follower:%d"

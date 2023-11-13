@@ -3,6 +3,7 @@ package service
 import (
 	"blue/entity"
 	"blue/global"
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"math"
@@ -12,25 +13,11 @@ import (
 
 // GoFeed 确保redis中有feed项
 func GoFeed() error {
-	n, err := global.REDIS.Exists(global.CONTEXT, "feed").Result()
-	if err != nil {
-		return err
-	}
-	if n <= 0 {
-		// "feed"不存在
-		var allGoods []entity.Goods
-		if err := global.DB.Find(&allGoods).Error; err != nil {
-			return err
-		}
-		if len(allGoods) == 0 {
-			return nil
-		}
-		var listZ = make([]*redis.Z, 0, len(allGoods))
-		for _, goods := range allGoods {
-			listZ = append(listZ, &redis.Z{Score: float64(goods.CreatedAt.UnixMilli()) / 1000, Member: goods.GoodsId})
-		}
-		return global.REDIS.ZAdd(global.CONTEXT, "feed", listZ...).Err()
-	}
+	var goods *[]entity.Goods
+	//查询数据库
+	global.DB.Order("created_at desc").Limit(global.MaxNumGoods).Find(&goods)
+	//加入缓存
+	AddGoodsByGoodsIdFromCacheToRedis(goods)
 	return nil
 }
 
@@ -65,4 +52,77 @@ func GetCommentCountOfGoods(goodsId int64) (int, error) {
 		return 0, err
 	}
 	return numComments, nil
+}
+
+func AddGoodsByGoodsIdFromCacheToRedis(goodsList *[]entity.Goods) error {
+	for _, goods := range *goodsList {
+		// 定义 key
+		goodsRedis := fmt.Sprintf(entity.GoodsPattern, goods.GoodsId)
+		// 使用 pipeline
+		_, err := global.REDIS.TxPipelined(global.CONTEXT, func(pipe redis.Pipeliner) error {
+			pipe.HSet(global.CONTEXT, goodsRedis, "goods_id", goods.GoodsId)
+			pipe.HSet(global.CONTEXT, goodsRedis, "picture_url", goods.PictureUrl)
+			pipe.HSet(global.CONTEXT, goodsRedis, "description", goods.Description)
+			pipe.HSet(global.CONTEXT, goodsRedis, "title", goods.Title)
+			pipe.HSet(global.CONTEXT, goodsRedis, "user_id", goods.UserId)
+			pipe.HSet(global.CONTEXT, goodsRedis, "created_at", goods.CreatedAt)
+			// 设置过期时间
+			pipe.Expire(global.CONTEXT, goodsRedis, global.GoodsExpire+time.Duration(rand.Float64()*global.ExpireTimeJitter.Seconds())*time.Second)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GetGoodsByGoodsIdFromRedis(goodsId int64) (*entity.Goods, error) {
+	// 定义 key
+	goodsRedis := fmt.Sprintf(entity.GoodsPattern, goodsId)
+
+	var goods entity.Goods
+	if result := global.REDIS.Exists(global.CONTEXT, goodsRedis).Val(); result <= 0 {
+		return nil, errors.New("not found in cache")
+	}
+	// 使用 pipeline
+	cmds, err := global.REDIS.TxPipelined(global.CONTEXT, func(pipe redis.Pipeliner) error {
+		pipe.HGetAll(global.CONTEXT, goodsRedis)
+		// 设置过期时间
+		pipe.Expire(global.CONTEXT, goodsRedis, global.UserInfoExpire+time.Duration(rand.Float64()*global.ExpireTimeJitter.Seconds())*time.Second)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err = cmds[0].(*redis.StringStringMapCmd).Scan(&goods); err != nil {
+		return nil, err
+	}
+	return &goods, nil
+}
+
+func GetGoodsListFromRedis() (*[]entity.Goods, error) {
+	// 定义 key
+	goodsRedis := "Goods:*"
+	var goods []entity.Goods
+	result, err := global.REDIS.Keys(global.CONTEXT, goodsRedis).Result()
+	if err != nil {
+		return nil, err
+	}
+	goods = make([]entity.Goods, len(result))
+	for i, str := range result {
+		cmds, err := global.REDIS.TxPipelined(global.CONTEXT, func(pipe redis.Pipeliner) error {
+			pipe.HGetAll(global.CONTEXT, str)
+			// 设置过期时间
+			pipe.Expire(global.CONTEXT, str, global.UserInfoExpire+time.Duration(rand.Float64()*global.ExpireTimeJitter.Seconds())*time.Second)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+		if err = cmds[0].(*redis.StringStringMapCmd).Scan(&goods[i]); err != nil {
+			return nil, err
+		}
+	}
+	return &goods, nil
 }

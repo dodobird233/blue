@@ -12,7 +12,7 @@ import (
 
 func GetUserInfoByUserIDFromRedis(userID int64) (*entity.UserData, error) {
 	// 定义 key
-	userRedis := fmt.Sprintf("userData:%d", userID)
+	userRedis := fmt.Sprintf(entity.UserDataPattern, userID)
 
 	var userdata entity.UserData
 	if result := global.REDIS.Exists(global.CONTEXT, userRedis).Val(); result <= 0 {
@@ -21,7 +21,6 @@ func GetUserInfoByUserIDFromRedis(userID int64) (*entity.UserData, error) {
 	// 使用 pipeline
 	cmds, err := global.REDIS.TxPipelined(global.CONTEXT, func(pipe redis.Pipeliner) error {
 		pipe.HGetAll(global.CONTEXT, userRedis)
-		//pipe.HGet(global.CONTEXT, userRedis, "created_at").Val()
 		// 设置过期时间
 		pipe.Expire(global.CONTEXT, userRedis, global.UserInfoExpire+time.Duration(rand.Float64()*global.ExpireTimeJitter.Seconds())*time.Second)
 		return nil
@@ -37,7 +36,7 @@ func GetUserInfoByUserIDFromRedis(userID int64) (*entity.UserData, error) {
 
 func AddUserInfoByUserIDFromCacheToRedis(userData *entity.UserData) error {
 	// 定义 key
-	userRedis := fmt.Sprintf("userData:%d", userData.UserId)
+	userRedis := fmt.Sprintf(entity.UserDataPattern, userData.UserId)
 
 	// 使用 pipeline
 	_, err := global.REDIS.TxPipelined(global.CONTEXT, func(pipe redis.Pipeliner) error {
@@ -51,7 +50,6 @@ func AddUserInfoByUserIDFromCacheToRedis(userData *entity.UserData) error {
 		pipe.HSet(global.CONTEXT, userRedis, "total_favorited", userData.TotalFavorited)
 		pipe.HSet(global.CONTEXT, userRedis, "work_count", userData.WorkCount)
 		pipe.HSet(global.CONTEXT, userRedis, "favorite_count", userData.FavoriteCount)
-		//pipe.HSet(global.CONTEXT, userRedis, "created_at", userData.CreatedAt.UnixMilli())
 		// 设置过期时间
 		pipe.Expire(global.CONTEXT, userRedis, global.UserInfoExpire+time.Duration(rand.Float64()*global.ExpireTimeJitter.Seconds())*time.Second)
 		return nil

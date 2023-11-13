@@ -29,7 +29,7 @@ func InitDB() error {
 	global.DB = db
 	return nil
 }
-func initRedis() {
+func InitRedis() error {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", global.RedisHost, global.RedisPort),
 		Password: global.RedisPwd,
@@ -45,4 +45,5 @@ func initRedis() {
 	if err := service.GoFeed(); err != nil {
 		panic(err.Error())
 	}
+	return nil
 }

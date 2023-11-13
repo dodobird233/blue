@@ -11,6 +11,10 @@ func main() {
 	if err != nil {
 		os.Exit(-1)
 	}
+	err = initialize.InitRedis()
+	if err != nil {
+		os.Exit(-1)
+	}
 	r := gin.Default()
 
 	initRouter(r)

@@ -57,10 +57,7 @@ func UserInfoByUserId(userId int64) (userdata entity.UserData, err error) {
 	if err == nil {
 		userdata = *puserdata
 		return
-	} else if err.Error() != "not found in cache" {
-		return
 	}
-
 	var user entity.User
 	result := global.DB.Where("user_id = ?", userId).First(&user)
 	if result.RowsAffected == 0 {
