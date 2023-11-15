@@ -4,7 +4,7 @@ import "time"
 
 type Goods struct {
 	GoodsId     int64     `gorm:"column:goods_id;primary_key;NOT NULL" redis:"goods_id"`
-	PictureUrl  string    `gorm:"column:picture_url;type:varchar(500)" redis:"picture_url"`
+	PictureUrl  string    `gorm:"column:picture_url;type:varchar(2000)" redis:"picture_url"`
 	Description string    `gorm:"column:description;type:varchar(500)" redis:"description"`
 	Title       string    `gorm:"column:title;type:varchar(100)" redis:"title"`
 	UserId      int64     `gorm:"column:user_id;NOT NULL" redis:"user_id"`
